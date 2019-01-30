@@ -1,4 +1,20 @@
-version: '3'
+version: '3.4'
+
+volumes:
+  certs:
+  db:
+  html:
+  nextcloud:
+  vhost.d:
+  data:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: "addr=${NFS_ADDR},${NFS_OPTS}"
+      device ":${NFS_DEVICE}"
+
+networks:
+  proxy-tier:
 
 services:
   db:
@@ -8,9 +24,10 @@ services:
     volumes:
       - db:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=
-    env_file:
-      - db.env
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_USER=${DB_USER}
 
   redis:
     image: redis:alpine
@@ -21,10 +38,16 @@ services:
     restart: always
     volumes:
       - nextcloud:/var/www/html
+      - type: volume
+        source: data
+        target: /var/www/html/data
+        volume:
+          nocopy: true
     environment:
       - MYSQL_HOST=db
-    env_file:
-      - db.env
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_USER=${DB_USER}
     depends_on:
       - db
       - redis
@@ -35,9 +58,9 @@ services:
     volumes:
       - nextcloud:/var/www/html:ro
     environment:
-      - VIRTUAL_HOST=
-      - LETSENCRYPT_HOST=
-      - LETSENCRYPT_EMAIL=
+      - VIRTUAL_HOST=${SERVER_HOST}
+      - LETSENCRYPT_HOST=${SERVER_HOST}
+      - LETSENCRYPT_EMAIL=${SERVER_EMAIL}
     depends_on:
       - app
     networks:
@@ -82,13 +105,3 @@ services:
       - proxy-tier
     depends_on:
       - proxy
-
-volumes:
-  db:
-  nextcloud:
-  certs:
-  vhost.d:
-  html:
-
-networks:
-  proxy-tier:
