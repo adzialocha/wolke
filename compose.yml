@@ -77,6 +77,28 @@ services:
       - db
       - redis
 
+  collabora:
+    image: collabora/code
+    restart: always
+    expose:
+      - 9980
+    cap_add:
+      - MKNOD
+    environment:
+      - domain=${COLLABORA_DOMAIN}
+      - username=${COLLABORA_USER}
+      - password=${COLLABORA_PASSWORD}
+      - dictionaries=${COLLABORA_DICTIONARIES}
+      - VIRTUAL_HOST=${COLLABORA_HOST}
+      - VIRTUAL_PORT=9980
+      - VIRTUAL_PROTO=https
+      - LETSENCRYPT_HOST=${COLLABORA_HOST}
+      - LETSENCRYPT_EMAIL=${SERVER_EMAIL}
+    depends_on:
+      - app
+    networks:
+      - proxy-tier
+
   proxy:
     build: ./proxy
     restart: always

@@ -1,6 +1,6 @@
 # wolke
 
-Run Nextcloud via Docker with NFS data storage, Redis, MariaDB and LetsEncrypt certificate.
+Run Nextcloud via Docker with NFS data storage, Collabora, Redis, MariaDB and LetsEncrypt certificate.
 
 ## Usage
 
