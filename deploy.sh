@@ -7,7 +7,7 @@ then
 fi
 
 # Delete all containers with a `wolke_` prefix
-docker rm --stop --force `docker ps -aq -f name=wolke_*`
+docker rm --force `docker ps -aq -f name=wolke_*`
 
 # Export environment variables
 set -a
