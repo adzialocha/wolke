@@ -10,6 +10,6 @@ then
   echo "Error: no active containers found" >&2
   exit 1
 else
-  echo "Remove active containers: $active_containers"
+  echo "Remove active containers:"
   docker rm --force $active_containers
 fi
