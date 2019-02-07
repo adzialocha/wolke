@@ -6,12 +6,6 @@ volumes:
   html:
   nextcloud:
   vhost.d:
-  data:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: "addr=${NFS_ADDR},${NFS_OPTS}"
-      device: ":${NFS_DEVICE}"
 
 networks:
   proxy-tier:
@@ -38,11 +32,6 @@ services:
     restart: always
     volumes:
       - nextcloud:/var/www/html
-      - type: volume
-        source: data
-        target: /var/www/html/data
-        volume:
-          nocopy: true
     environment:
       - MYSQL_HOST=db
       - MYSQL_DATABASE=${DB_NAME}
