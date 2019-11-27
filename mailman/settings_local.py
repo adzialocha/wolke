@@ -209,7 +209,7 @@ SERVER_EMAIL = 'root@{}'.format(hostname)
 
 # Change this when you have a real email backend
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('SMTP_HOST', '172.19.199.1')
+EMAIL_HOST = os.environ.get('SMTP_HOST', '127.0.0.1')
 EMAIL_PORT = os.environ.get('SMTP_PORT', 25)
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
@@ -237,33 +237,7 @@ ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 # You probably want https in production, but this is a dev setup file
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 ACCOUNT_UNIQUE_EMAIL  = True
-
-SOCIALACCOUNT_PROVIDERS = {
-    'openid': {
-        'SERVERS': [
-            dict(id='yahoo',
-                 name='Yahoo',
-                 openid_url='http://me.yahoo.com'),
-        ],
-    },
-    'google': {
-        'SCOPE': ['profile', 'email'],
-        'AUTH_PARAMS': {'access_type': 'online'},
-    },
-    'facebook': {
-       'METHOD': 'oauth2',
-       'SCOPE': ['email'],
-       'FIELDS': [
-           'email',
-           'name',
-           'first_name',
-           'last_name',
-           'locale',
-           'timezone',
-           ],
-       'VERSION': 'v2.4',
-    },
-}
+SOCIALACCOUNT_PROVIDERS = {}
 
 
 import sys
