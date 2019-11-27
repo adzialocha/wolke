@@ -174,7 +174,7 @@ services:
       - RELAY_USE_TLS=yes
       - RELAY_TLS_VERIFY=encrypt
       - RELAY_TLS_CA=/etc/nginx/certs
-      - 'RELAY_EXTRAS_SETTINGS=owner_request_special=no unknown_local_recipient_reject_code=550 transport_maps=regexp:/opt/mailman/var/data/postfix_lmtp local_recipient_maps=regexp:/opt/mailman/var/data/postfix_lmtp relay_domains=regexp:/opt/mailman/var/data/postfix_domains inet_interfaces=localhost smtp_tls_wrappermode=yes'
+      - 'RELAY_EXTRAS_SETTINGS=owner_request_special=no unknown_local_recipient_reject_code=550 smtp_tls_wrappermode=yes'
 
   mailman:
     image: maxking/mailman-core:latest
@@ -206,6 +206,7 @@ services:
       - HYPERKITTY_API_KEY=${MAILMAN_HYPERKITTY_API_KEY}
       - LETSENCRYPT_EMAIL=${SSL_EMAIL}
       - LETSENCRYPT_HOST=${HOST_MAILMAN}
+      - POSTFIX_MASTER=${POSTFIX_MASTER}
       - MAILMAN_ADMIN_EMAIL=${MAILMAN_ADMIN_EMAIL}
       - MAILMAN_ADMIN_USER=${MAILMAN_ADMIN_USER}
       - SECRET_KEY=${MAILMAN_SECRET_KEY}
