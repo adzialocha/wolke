@@ -201,8 +201,10 @@ LOGOUT_URL = 'account_logout'
 
 # Use SERVE_FROM_DOMAIN as the default domain in the email.
 hostname = os.environ.get('SERVE_FROM_DOMAIN', 'localhost.local')
-DEFAULT_FROM_EMAIL = os.environ.get('POSTFIX_POSTMASTER', 'bot@{}'.format(hostname))
-SERVER_EMAIL = os.environ.get('POSTFIX_POSTMASTER', 'bot@{}'.format(hostname))
+
+# @TODO: This is hardcoded for now
+DEFAULT_FROM_EMAIL = 'bot@adz.garden'
+SERVER_EMAIL = 'bot@adz.garden'
 
 # Change this when you have a real email backend
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
