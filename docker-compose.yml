@@ -4,7 +4,6 @@ volumes:
   certs:
   conf:
   html:
-  mailman:
 
 services:
   db:
@@ -43,7 +42,6 @@ services:
     depends_on:
       - collabora
       - git
-      - mailman-web
       - nextcloud
       - nginx
     volumes:
@@ -87,14 +85,8 @@ services:
     environment:
       - LETSENCRYPT_EMAIL=${SSL_EMAIL}
       - LETSENCRYPT_HOST=${HOST_NEXTCLOUD}
-      - MAIL_FROM_ADDRESS=${SMTP_LOGIN}
       - POSTGRES_DB=${POSTGRES_DATABASE_NEXCLOUD}
       - POSTGRES_HOST=db
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_NAME=${SMTP_LOGIN}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_SECURE=tls
       - VIRTUAL_HOST=${HOST_NEXTCLOUD}
 
   collabora:
@@ -155,62 +147,3 @@ services:
       - VIRTUAL_PORT=3000
     ports:
       - "127.0.0.1:2222:22"
-
-  postfix:
-    image: turgon37/smtp-relay:latest
-    container_name: postfix
-    volumes:
-      - certs:/etc/nginx/certs
-      - mailman:/opt/mailman/var/data
-    environment:
-      - RELAY_POSTMASTER=${POSTFIX_POSTMASTER}
-      - RELAY_MYHOSTNAME=${HOST_MAILMAN}
-      - RELAY_MYDOMAIN=${HOST}
-      - RELAY_MYNETWORKS=127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
-      - RELAY_HOST=[${SMTP_HOST}]:${SMTP_PORT}
-      - RELAY_MODE=ALLOW_SASLAUTH_NODOMAIN
-      - RELAY_LOGIN=${SMTP_LOGIN}
-      - RELAY_PASSWORD=${SMTP_PASSWORD}
-      - RELAY_USE_TLS=yes
-      - RELAY_TLS_VERIFY=encrypt
-      - RELAY_TLS_CA=/etc/nginx/certs/_test_list.adz.garden/cert.pem
-      - 'RELAY_EXTRAS_SETTINGS=owner_request_special=no unknown_local_recipient_reject_code=550 smtp_tls_wrappermode=yes'
-
-  mailman:
-    image: maxking/mailman-core:latest
-    container_name: mailman
-    depends_on:
-      - db
-      - postfix
-    volumes:
-      - mailman:/opt/mailman/var/data
-      - ./mailman/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
-    environment:
-      - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
-      - DATABASE_TYPE=postgres
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
-      - HYPERKITTY_API_KEY=${MAILMAN_HYPERKITTY_API_KEY}
-      - MTA=postfix
-
-  mailman-web:
-    image: maxking/postorius:latest
-    container_name: mailman-web
-    depends_on:
-      - db
-      - mailman
-    volumes:
-      - ./mailman/settings_local.py:/opt/mailman-web-data/settings_local.py
-    environment:
-      - DATABASE_TYPE=postgres
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
-      - HYPERKITTY_API_KEY=${MAILMAN_HYPERKITTY_API_KEY}
-      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
-      - LETSENCRYPT_HOST=${HOST_MAILMAN}
-      - MAILMAN_ADMIN_EMAIL=${MAILMAN_ADMIN_EMAIL}
-      - MAILMAN_ADMIN_USER=${MAILMAN_ADMIN_USER}
-      - SECRET_KEY=${MAILMAN_SECRET_KEY}
-      - SERVE_FROM_DOMAIN=${HOST_MAILMAN}
-      - UWSGI_STATIC_MAP=/static=/opt/mailman-web-data/static
-      - VIRTUAL_HOST=${HOST_MAILMAN}
-      - VIRTUAL_PORT=8080
-      - VIRTUAL_PROTO=uwsgi
