@@ -158,18 +158,19 @@ services:
       - "3000:3000"
 
   mailman:
-    image: maxking/mailman-core:0.3.0
+    image: maxking/mailman-core:latest
     container_name: mailman
     depends_on:
       - db
     volumes:
       - mailman_data:/opt/mailman/
-      - ./mailman/mailman-extra.cfg:/opt/mailman/core/mailman-extra.cfg
+      - ./mailman/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
     environment:
       - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
       - DATABASE_TYPE=postgres
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
       - HYPERKITTY_API_KEY=${MAILMAN_HYPERKITTY_API_KEY}
+      - MTA=postfix
 
   mailman-web:
     image: maxking/postorius:latest
@@ -178,7 +179,7 @@ services:
       - db
     volumes:
       - mailman_html:/opt/mailman-web-data
-      - ./mailman/settings_local.py:/opt/mailman/web/settings_local.py
+      - ./mailman/settings_local.py:/opt/mailman-web-data/settings_local.py
     environment:
       - DATABASE_TYPE=postgres
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
