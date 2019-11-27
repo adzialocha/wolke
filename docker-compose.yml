@@ -3,13 +3,7 @@ version: '3'
 volumes:
   certs:
   conf:
-  db:
   html:
-  git_data:
-  mailman_data:
-  mailman_html:
-  nextcloud_data:
-  nextcloud_html:
 
 networks:
    mailman:
@@ -28,7 +22,7 @@ services:
     env_file:
       - .env
     volumes:
-      - db:/var/lib/postgresql/data
+      - /opt/db:/var/lib/postgresql/data
       - ./db/init-databases.sh:/docker-entrypoint-initdb.d/init.sh
 
   redis:
@@ -97,8 +91,7 @@ services:
       - redis
     restart: always
     volumes:
-      - nextcloud_data:/var/www/html/data
-      - nextcloud_html:/var/www/html
+      - /opt/nextcloud:/var/www/html/data
     environment:
       - LETSENCRYPT_EMAIL=${SSL_EMAIL}
       - LETSENCRYPT_HOST=${HOST_NEXTCLOUD}
@@ -142,7 +135,7 @@ services:
     depends_on:
       - db
     volumes:
-      - git_data:/data
+      - /opt/git:/data
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     environment:
@@ -171,7 +164,7 @@ services:
     depends_on:
       - db
     volumes:
-      - mailman_data:/opt/mailman/
+      - /opt/mailman:/opt/mailman
       - ./mailman/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
     environment:
       - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
@@ -189,7 +182,6 @@ services:
     depends_on:
       - db
     volumes:
-      - mailman_html:/opt/mailman-web-data
       - ./mailman/settings_local.py:/opt/mailman-web-data/settings_local.py
     environment:
       - DATABASE_TYPE=postgres
