@@ -67,6 +67,7 @@ services:
       - gen
       - nginx
     environment:
+      - ACME_CA_URI=https://acme-staging-v02.api.letsencrypt.org/directory
       - NGINX_PROXY_CONTAINER=nginx-proxy
       - NGINX_DOCKER_GEN_CONTAINER=nginx-proxy-gen
     volumes:
@@ -92,7 +93,7 @@ services:
     environment:
       - LETSENCRYPT_EMAIL=${SSL_EMAIL}
       - LETSENCRYPT_HOST=${HOST_NEXTCLOUD}
-      - POSTGRES_DATABASE=${POSTGRES_DATABASE_NEXCLOUD}
+      - POSTGRES_DB=${POSTGRES_DATABASE_NEXCLOUD}
       - POSTGRES_HOST=db
       - VIRTUAL_HOST=${HOST_NEXTCLOUD}
 
@@ -136,7 +137,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     environment:
-      - APP_NAME=${HOST_GIT}
       - DB_HOST=db
       - DB_NAME=${POSTGRES_DATABASE_GIT}
       - DB_PASSWD=${POSTGRES_PASSWORD}
@@ -146,7 +146,6 @@ services:
       - HTTP_PORT=3000
       - LETSENCRYPT_EMAIL=${SSL_EMAIL}
       - LETSENCRYPT_HOST=${HOST_GIT}
-      - ROOT_URL=${HOST_GIT}
       - RUN_MODE=prod
       - SSH_DOMAIN=${HOST_GIT}
       - SSH_LISTEN_PORT=2222
@@ -165,6 +164,7 @@ services:
       - db
     volumes:
       - mailman_data:/opt/mailman/
+      - ./mailman/mailman-extra.cfg:/opt/mailman/core/mailman-extra.cfg
     environment:
       - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
       - DATABASE_TYPE=postgres
@@ -178,6 +178,7 @@ services:
       - db
     volumes:
       - mailman_html:/opt/mailman-web-data
+      - ./mailman/settings_local.py:/opt/mailman/web/settings_local.py
     environment:
       - DATABASE_TYPE=postgres
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
