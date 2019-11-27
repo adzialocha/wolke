@@ -155,7 +155,6 @@ services:
       - VIRTUAL_PORT=3000
     ports:
       - "127.0.0.1:2222:22"
-      - "3000:3000"
 
   mailman:
     image: maxking/mailman-core:latest
@@ -191,6 +190,6 @@ services:
       - SECRET_KEY=${MAILMAN_SECRET_KEY}
       - SERVE_FROM_DOMAIN=${HOST_MAILMAN}
       - UWSGI_STATIC_MAP=/static=/opt/mailman-web-data/static
-      - VIRTUAL_HOST=${HOST_MAILMAN}
+      - VIRTUAL_HOST=mai
       - VIRTUAL_PORT=8080
       - VIRTUAL_PROTO=uwsgi

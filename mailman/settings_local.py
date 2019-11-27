@@ -50,7 +50,7 @@ ALLOWED_HOSTS = [
     # "lists.your-domain.org",
     # Add here all production URLs you may have.
     "mailman-web",
-    "172.19.199.3",
+    "mailman",
     os.environ.get('SERVE_FROM_DOMAIN'),
     os.environ.get('DJANGO_ALLOWED_HOSTS'),
 ]
@@ -58,10 +58,10 @@ ALLOWED_HOSTS = [
 # Try to get the address of Mailman Core automatically.
 
 # Mailman API credentials
-MAILMAN_REST_API_URL = os.environ.get('MAILMAN_REST_URL', 'http://mailman-core:8001')
+MAILMAN_REST_API_URL = os.environ.get('MAILMAN_REST_URL', 'http://mailman:8001')
 MAILMAN_REST_API_USER = os.environ.get('MAILMAN_REST_USER', 'restadmin')
 MAILMAN_REST_API_PASS = os.environ.get('MAILMAN_REST_PASSWORD', 'restpass')
-MAILMAN_ARCHIVER_FROM = (os.environ.get('MAILMAN_HOST_IP', '172.19.199.2'),)
+MAILMAN_ARCHIVER_FROM = (os.environ.get('MAILMAN_HOST_IP', 'mailman'),)
 
 # Application definition
 
@@ -192,7 +192,6 @@ STATIC_URL = '/static/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'compressor.finders.CompressorFinder',
 )
 
 
