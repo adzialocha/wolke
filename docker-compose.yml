@@ -4,15 +4,7 @@ volumes:
   certs:
   conf:
   html:
-
-networks:
-   mailman:
-     driver: bridge
-     ipam:
-       driver: default
-       config:
-         -
-           subnet: 172.19.199.0/24
+  mailman:
 
 services:
   db:
@@ -158,13 +150,34 @@ services:
     ports:
       - "127.0.0.1:2222:22"
 
+  postfix:
+    image: turgon37/smtp-relay:latest
+    container_name: postfix
+    volumes:
+      - certs:/etc/nginx/certs
+      - mailman:/opt/mailman/var/data
+    environment:
+      - RELAY_POSTMASTER=${POSTFIX_POSTMASTER}
+      - RELAY_MYHOSTNAME=${HOST_MAILMAN}
+      - RELAY_MYDOMAIN=${HOST}
+      - RELAY_MYNETWORKS=127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+      - RELAY_HOST=[${SMTP_HOST}]:${SMTP_PORT}
+      - RELAY_MODE=ALLOW_SASLAUTH_NODOMAIN
+      - RELAY_LOGIN=${SMTP_LOGIN}
+      - RELAY_PASSWORD=${SMTP_PASSWORD}
+      - RELAY_USE_TLS=yes
+      - RELAY_TLS_VERIFY=encrypt
+      - RELAY_TLS_CA=/etc/nginx/certs
+      - 'RELAY_EXTRAS_SETTINGS=owner_request_special=no,unknown_local_recipient_reject_code=550,transport_maps=regexp:/opt/mailman/var/data/postfix_lmtp,local_recipient_maps=regexp:/opt/mailman/var/data/postfix_lmtp,relay_domains=regexp:/opt/mailman/var/data/postfix_domains,inet_interfaces=localhost,smtp_tls_wrappermode=yes'
+
   mailman:
     image: maxking/mailman-core:latest
     container_name: mailman
     depends_on:
       - db
+      - postfix
     volumes:
-      - /opt/mailman:/opt/mailman
+      - mailman:/opt/mailman/var/data
       - ./mailman/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
     environment:
       - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
@@ -172,15 +185,13 @@ services:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
       - HYPERKITTY_API_KEY=${MAILMAN_HYPERKITTY_API_KEY}
       - MTA=postfix
-    networks:
-      mailman:
-        ipv4_address: 172.19.199.2
 
   mailman-web:
     image: maxking/postorius:latest
     container_name: mailman-web
     depends_on:
       - db
+      - mailman
     volumes:
       - ./mailman/settings_local.py:/opt/mailman-web-data/settings_local.py
     environment:
@@ -197,6 +208,3 @@ services:
       - VIRTUAL_HOST=${HOST_MAILMAN}
       - VIRTUAL_PORT=8080
       - VIRTUAL_PROTO=uwsgi
-    networks:
-      mailman:
-        ipv4_address: 172.19.199.3

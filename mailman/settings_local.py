@@ -68,10 +68,7 @@ MAILMAN_ARCHIVER_FROM = (os.environ.get('MAILMAN_HOST_IP', 'mailman'),)
 INSTALLED_APPS = (
     'postorius',
     'django_mailman3',
-    # Uncomment the next line to enable the admin:
     'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -204,12 +201,12 @@ LOGOUT_URL = 'account_logout'
 
 # Use SERVE_FROM_DOMAIN as the default domain in the email.
 hostname = os.environ.get('SERVE_FROM_DOMAIN', 'localhost.local')
-DEFAULT_FROM_EMAIL = 'postorius@{}'.format(hostname)
-SERVER_EMAIL = 'root@{}'.format(hostname)
+DEFAULT_FROM_EMAIL = 'bot@{}'.format(hostname)
+SERVER_EMAIL = 'bot@{}'.format(hostname)
 
 # Change this when you have a real email backend
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('SMTP_HOST', '127.0.0.1')
+EMAIL_HOST = os.environ.get('SMTP_HOST', 'postfix')
 EMAIL_PORT = os.environ.get('SMTP_PORT', 25)
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
