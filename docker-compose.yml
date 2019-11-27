@@ -48,7 +48,7 @@ services:
     depends_on:
       - collabora
       - git
-      - mailman
+      - mailman-web
       - nextcloud
       - nginx
     volumes:
@@ -80,6 +80,8 @@ services:
     build: nextcloud
     container_name: nextcloud
     restart: always
+    env_file:
+      - .env
     depends_on:
       - db
       - redis
@@ -152,8 +154,6 @@ services:
       - USER_UID=1000
       - VIRTUAL_HOST=${HOST_GIT}
       - VIRTUAL_PORT=3000
-    networks:
-      - gitea
     ports:
       - "127.0.0.1:2222:22"
       - "3000:3000"
@@ -165,11 +165,10 @@ services:
       - db
     volumes:
       - mailman_data:/opt/mailman/
-      stop_grace_period: 30s
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
-      - DATABASE_TYPE=postgres
       - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
+      - DATABASE_TYPE=postgres
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
       - HYPERKITTY_API_KEY=${MAILMAN_HYPERKITTY_API_KEY}
 
   mailman-web:
@@ -180,15 +179,15 @@ services:
     volumes:
       - mailman_html:/opt/mailman-web-data
     environment:
-      - SERVE_FROM_DOMAIN=${HOST_MAILMAN}
-      - MAILMAN_ADMIN_USER=${MAILMAN_ADMIN_USER}
-      - MAILMAN_ADMIN_EMAIL=${MAILMAN_ADMIN_EMAIL}
       - DATABASE_TYPE=postgres
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
       - HYPERKITTY_API_KEY=${MAILMAN_HYPERKITTY_API_KEY}
       - LETSENCRYPT_EMAIL=${SSL_EMAIL}
       - LETSENCRYPT_HOST=${HOST_MAILMAN}
+      - MAILMAN_ADMIN_EMAIL=${MAILMAN_ADMIN_EMAIL}
+      - MAILMAN_ADMIN_USER=${MAILMAN_ADMIN_USER}
       - SECRET_KEY=${MAILMAN_SECRET_KEY}
+      - SERVE_FROM_DOMAIN=${HOST_MAILMAN}
       - UWSGI_STATIC_MAP=/static=/opt/mailman-web-data/static
       - VIRTUAL_HOST=${HOST_MAILMAN}
       - VIRTUAL_PORT=8080
