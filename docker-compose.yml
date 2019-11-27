@@ -173,7 +173,7 @@ services:
       - RELAY_PASSWORD=${SMTP_PASSWORD}
       - RELAY_USE_TLS=yes
       - RELAY_TLS_VERIFY=encrypt
-      - RELAY_TLS_CA=/etc/nginx/certs
+      - RELAY_TLS_CA=/etc/nginx/certs/_test_list.adz.garden/cert.pem
       - 'RELAY_EXTRAS_SETTINGS=owner_request_special=no unknown_local_recipient_reject_code=550 smtp_tls_wrappermode=yes'
 
   mailman:
