@@ -1,0 +1,195 @@
+version: '3'
+
+volumes:
+  certs:
+  conf:
+  db:
+  html:
+  git_data:
+  mailman_data:
+  mailman_html:
+  nextcloud_data:
+  nextcloud_html:
+
+services:
+  db:
+    image: postgres:12.1-alpine
+    container_name: db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./db/init-databases.sh:/docker-entrypoint-initdb.d/init.sh
+
+  redis:
+    image: redis:5.0.7-alpine
+    container_name: redis
+    restart: always
+
+  nginx:
+    image: nginx:1.17.6-alpine
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certs:/etc/nginx/certs
+      - conf:/etc/nginx/conf.d
+      - html:/usr/share/nginx/html
+      - ./nginx-proxy/vhost.d:/etc/nginx/vhost.d
+    labels:
+      - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true"
+
+  gen:
+    image: jwilder/docker-gen:0.7.0
+    container_name: nginx-proxy-gen
+    depends_on:
+      - collabora
+      - git
+      - mailman
+      - nextcloud
+      - nginx
+    volumes:
+      - certs:/etc/nginx/certs
+      - conf:/etc/nginx/conf.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx-proxy/vhost.d:/etc/nginx/vhost.d
+      - ./nginx-proxy/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
+    command: -notify-sighup nginx-proxy -watch -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: nginx-proxy-letsencrypt
+    depends_on:
+      - gen
+      - nginx
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+      - NGINX_DOCKER_GEN_CONTAINER=nginx-proxy-gen
+    volumes:
+      - certs:/etc/nginx/certs
+      - conf:/etc/nginx/conf.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./nginx-proxy/vhost.d:/etc/nginx/vhost.d
+
+  nextcloud:
+    build: nextcloud
+    container_name: nextcloud
+    restart: always
+    depends_on:
+      - db
+      - redis
+    restart: always
+    volumes:
+      - nextcloud_data:/var/www/html/data
+      - nextcloud_html:/var/www/html
+    environment:
+      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
+      - LETSENCRYPT_HOST=${HOST_NEXTCLOUD}
+      - POSTGRES_DATABASE=${POSTGRES_DATABASE_NEXCLOUD}
+      - POSTGRES_HOST=db
+      - VIRTUAL_HOST=${HOST_NEXTCLOUD}
+
+  collabora:
+    image: collabora/code
+    container_name: collabora
+    restart: always
+    depends_on:
+      - nextcloud
+    restart: always
+    cap_add:
+      - MKNOD
+    environment:
+      - domain=${COLLABORA_DOMAIN}
+      - username=${COLLABORA_USER}
+      - password=${COLLABORA_PASSWORD}
+      - dictionaries=${COLLABORA_DICTIONARIES}
+      - VIRTUAL_HOST=${HOST_COLLABORA}
+      - VIRTUAL_PORT=9980
+      - VIRTUAL_PROTO=https
+      - LETSENCRYPT_HOST=${HOST_COLLABORA}
+      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
+    expose:
+      - 9980
+
+  coturn:
+    build: coturn
+    container_name: coturn
+    restart: always
+    env_file: '.env'
+    network_mode: 'host'
+
+  git:
+    image: gitea/gitea:1.10.0
+    container_name: git
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - git_data:/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      - APP_NAME=${HOST_GIT}
+      - DB_HOST=db
+      - DB_NAME=${POSTGRES_DATABASE_GIT}
+      - DB_PASSWD=${POSTGRES_PASSWORD}
+      - DB_TYPE=postgres
+      - DB_USER=${POSTGRES_USER}
+      - DISABLE_REGISTRATION=true
+      - HTTP_PORT=3000
+      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
+      - LETSENCRYPT_HOST=${HOST_GIT}
+      - ROOT_URL=${HOST_GIT}
+      - RUN_MODE=prod
+      - SSH_DOMAIN=${HOST_GIT}
+      - SSH_LISTEN_PORT=2222
+      - USER_GID=1000
+      - USER_UID=1000
+      - VIRTUAL_HOST=${HOST_GIT}
+      - VIRTUAL_PORT=3000
+    networks:
+      - gitea
+    ports:
+      - "127.0.0.1:2222:22"
+      - "3000:3000"
+
+  mailman:
+    image: maxking/mailman-core:0.3.0
+    container_name: mailman
+    depends_on:
+      - db
+    volumes:
+      - mailman_data:/opt/mailman/
+      stop_grace_period: 30s
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
+      - DATABASE_TYPE=postgres
+      - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
+      - HYPERKITTY_API_KEY=${MAILMAN_HYPERKITTY_API_KEY}
+
+  mailman-web:
+    image: maxking/postorius:latest
+    container_name: mailman-web
+    depends_on:
+      - db
+    volumes:
+      - mailman_html:/opt/mailman-web-data
+    environment:
+      - SERVE_FROM_DOMAIN=${HOST_MAILMAN}
+      - MAILMAN_ADMIN_USER=${MAILMAN_ADMIN_USER}
+      - MAILMAN_ADMIN_EMAIL=${MAILMAN_ADMIN_EMAIL}
+      - DATABASE_TYPE=postgres
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DATABASE_MAILMAN}
+      - HYPERKITTY_API_KEY=${MAILMAN_HYPERKITTY_API_KEY}
+      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
+      - LETSENCRYPT_HOST=${HOST_MAILMAN}
+      - SECRET_KEY=${MAILMAN_SECRET_KEY}
+      - UWSGI_STATIC_MAP=/static=/opt/mailman-web-data/static
+      - VIRTUAL_HOST=${HOST_MAILMAN}
+      - VIRTUAL_PORT=8080
+      - VIRTUAL_PROTO=uwsgi
