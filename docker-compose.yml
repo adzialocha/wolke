@@ -4,17 +4,24 @@ volumes:
   certs:
   conf:
   html:
+  db:
+  git:
+  nextcloud_config:
+  nextcloud_data:
+  nextcloud_db:
+  nextcloud_html:
 
 services:
   db:
     image: postgres:12.1-alpine
     container_name: db
     restart: always
-    env_file:
-      - .env
     volumes:
-      - /opt/db:/var/lib/postgresql/data
+      - db:/var/lib/postgresql/data
       - ./db/init-databases.sh:/docker-entrypoint-initdb.d/init.sh
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
 
   redis:
     image: redis:5.0.7-alpine
@@ -74,19 +81,22 @@ services:
     build: nextcloud
     container_name: nextcloud
     restart: always
-    env_file:
-      - .env
     depends_on:
       - db
       - redis
     restart: always
     volumes:
-      - /opt/nextcloud:/var/www/html/data
+      - nextcloud_config:/var/www/html/config
+      - nextcloud_data:/var/www/html/data
+      - nextcloud_db:/var/lib/postgresql/data
+      - nextcloud_html:/var/www/html
     environment:
-      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
-      - LETSENCRYPT_HOST=${HOST_NEXTCLOUD}
       - POSTGRES_DB=${POSTGRES_DATABASE_NEXCLOUD}
       - POSTGRES_HOST=db
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
+      - LETSENCRYPT_HOST=${HOST_NEXTCLOUD}
       - VIRTUAL_HOST=${HOST_NEXTCLOUD}
 
   collabora:
@@ -125,7 +135,7 @@ services:
     depends_on:
       - db
     volumes:
-      - /opt/git:/data
+      - git:/data
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     environment:
@@ -134,15 +144,14 @@ services:
       - DB_PASSWD=${POSTGRES_PASSWORD}
       - DB_TYPE=postgres
       - DB_USER=${POSTGRES_USER}
-      - DISABLE_REGISTRATION=true
       - HTTP_PORT=3000
-      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
-      - LETSENCRYPT_HOST=${HOST_GIT}
       - RUN_MODE=prod
       - SSH_DOMAIN=${HOST_GIT}
       - SSH_LISTEN_PORT=2222
       - USER_GID=1000
       - USER_UID=1000
+      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
+      - LETSENCRYPT_HOST=${HOST_GIT}
       - VIRTUAL_HOST=${HOST_GIT}
       - VIRTUAL_PORT=3000
     ports:
