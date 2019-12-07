@@ -5,7 +5,6 @@ volumes:
   conf:
   html:
   db:
-  git:
   nextcloud_config:
   nextcloud_data:
   nextcloud_db:
@@ -49,7 +48,6 @@ services:
     container_name: nginx-proxy-gen
     depends_on:
       - collabora
-      - git
       - nextcloud
       - nginx
     volumes:
@@ -128,32 +126,3 @@ services:
     restart: always
     env_file: '.env'
     network_mode: 'host'
-
-  git:
-    image: gitea/gitea:1.10.0
-    container_name: git
-    restart: always
-    depends_on:
-      - db
-    volumes:
-      - git:/data
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-    environment:
-      - DB_HOST=db
-      - DB_NAME=${POSTGRES_DATABASE_GIT}
-      - DB_PASSWD=${POSTGRES_PASSWORD}
-      - DB_TYPE=postgres
-      - DB_USER=${POSTGRES_USER}
-      - HTTP_PORT=3000
-      - RUN_MODE=prod
-      - SSH_DOMAIN=${HOST_GIT}
-      - SSH_LISTEN_PORT=2222
-      - USER_GID=1000
-      - USER_UID=1000
-      - LETSENCRYPT_EMAIL=${SSL_EMAIL}
-      - LETSENCRYPT_HOST=${HOST_GIT}
-      - VIRTUAL_HOST=${HOST_GIT}
-      - VIRTUAL_PORT=3000
-    ports:
-      - "127.0.0.1:2222:22"
