@@ -66,7 +66,6 @@ services:
       - gen
       - nginx
     environment:
-      - ACME_CA_URI=https://acme-staging-v02.api.letsencrypt.org/directory
       - NGINX_PROXY_CONTAINER=nginx-proxy
       - NGINX_DOCKER_GEN_CONTAINER=nginx-proxy-gen
     volumes:
