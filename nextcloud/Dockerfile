@@ -1,4 +1,4 @@
-FROM nextcloud:17.0.1-apache
+FROM nextcloud:18.0.4-apache
 
 RUN apt-get update && apt-get install -y \
     supervisor \
