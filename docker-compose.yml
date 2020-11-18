@@ -98,7 +98,7 @@ services:
       - VIRTUAL_HOST=${HOST_NEXTCLOUD}
 
   collabora:
-    image: collabora/code
+    image: collabora/code:6.4.0.14
     container_name: collabora
     restart: always
     depends_on:
