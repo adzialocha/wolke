@@ -3,12 +3,14 @@ version: '3'
 volumes:
   certs:
   conf:
-  html:
   db:
+  html:
   nextcloud_config:
   nextcloud_data:
   nextcloud_db:
   nextcloud_html:
+  onlyoffice_data:
+  onlyoffice_log:
 
 services:
   db:
@@ -44,7 +46,7 @@ services:
       - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true"
 
   gen:
-    image: jwilder/docker-gen:0.7.0
+    image: jwilder/docker-gen:0.7.5
     container_name: nginx-proxy-gen
     depends_on:
       - collabora
@@ -97,27 +99,33 @@ services:
       - LETSENCRYPT_HOST=${HOST_NEXTCLOUD}
       - VIRTUAL_HOST=${HOST_NEXTCLOUD}
 
-  collabora:
-    image: collabora/code:6.4.6.2
-    container_name: collabora
+  onlyoffice:
+    image: onlyoffice/documentserver:6.2.1
+    container_name: onlyoffice
     restart: always
-    depends_on:
-      - nextcloud
-    restart: always
-    cap_add:
-      - MKNOD
+    ports:
+      - "80"
+      - "443"
+    volumes:
+      - onlyoffice_data:/var/www/onlyoffice/Data
+      - onlyoffice_log:/var/log/onlyoffice
     environment:
-      - domain=${COLLABORA_DOMAIN}
-      - username=${COLLABORA_USER}
-      - password=${COLLABORA_PASSWORD}
-      - dictionaries=${COLLABORA_DICTIONARIES}
-      - VIRTUAL_HOST=${HOST_COLLABORA}
-      - VIRTUAL_PORT=9980
-      - VIRTUAL_PROTO=https
-      - LETSENCRYPT_HOST=${HOST_COLLABORA}
+      - DB_HOST=db
+      - DB_NAME=${POSTGRES_DATABASE_ONLYOFFICE}
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER}
+      - DB_PWD=${POSTGRES_PASSWORD}
+      - REDIS_SERVER_HOST=redis
+      - REDIS_SERVER_PORT=6379
+      - LETSENCRYPT_HOST=${HOST_ONLYOFFICE}
       - LETSENCRYPT_EMAIL=${SSL_EMAIL}
-    expose:
-      - 9980
+      - VIRTUAL_HOST=${HOST_ONLYOFFICE}
+      - VIRTUAL_PROTO=https
+
+  onlyoffice-rabbitmq:
+    image: rabbitmq:3.8.14
+    container_name: onlyoffice-rabbitmq
+    restart: always
 
   coturn:
     build: coturn

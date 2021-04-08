@@ -4,6 +4,7 @@ set -e
 
 DATABASES=(
   $POSTGRES_DATABASE_NEXTCLOUD
+  $POSTGRES_DATABASE_ONLYOFFICE
 )
 
 create_database () {
