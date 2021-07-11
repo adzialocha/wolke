@@ -100,7 +100,7 @@ services:
       - VIRTUAL_HOST=${HOST_NEXTCLOUD}
 
   onlyoffice:
-    image: onlyoffice/documentserver:6.2.1
+    image: onlyoffice/documentserver:6.3.1
     container_name: onlyoffice
     restart: always
     expose:
