@@ -9,8 +9,6 @@ volumes:
   nextcloud_data:
   nextcloud_db:
   nextcloud_html:
-  onlyoffice_data:
-  onlyoffice_log:
 
 services:
   db:
@@ -49,7 +47,7 @@ services:
     image: jwilder/docker-gen:0.7.0
     container_name: nginx-proxy-gen
     depends_on:
-      - onlyoffice
+      - collabora
       - nextcloud
       - nginx
     volumes:
@@ -99,32 +97,27 @@ services:
       - LETSENCRYPT_HOST=${HOST_NEXTCLOUD}
       - VIRTUAL_HOST=${HOST_NEXTCLOUD}
 
-  onlyoffice:
-    image: onlyoffice/documentserver:6.3.1
-    container_name: onlyoffice
+  collabora:
+    image: collabora/code:6.4.10.10
+    container_name: collabora
     restart: always
-    expose:
-      - "80"
-    volumes:
-      - onlyoffice_data:/var/www/onlyoffice/Data
-      - onlyoffice_log:/var/log/onlyoffice
+    depends_on:
+      - nextcloud
+    restart: always
+    cap_add:
+      - MKNOD
     environment:
-      - AMQP_URI=amqp://guest:guest@onlyoffice-rabbitmq
-      - DB_HOST=db
-      - DB_NAME=${POSTGRES_DATABASE_ONLYOFFICE}
-      - DB_PORT=5432
-      - DB_PWD=${POSTGRES_PASSWORD}
-      - DB_USER=${POSTGRES_USER}
+      - domain=${COLLABORA_DOMAIN}
+      - username=${COLLABORA_USER}
+      - password=${COLLABORA_PASSWORD}
+      - dictionaries=${COLLABORA_DICTIONARIES}
+      - VIRTUAL_HOST=${HOST_COLLABORA}
+      - VIRTUAL_PORT=9980
+      - VIRTUAL_PROTO=https
+      - LETSENCRYPT_HOST=${HOST_COLLABORA}
       - LETSENCRYPT_EMAIL=${SSL_EMAIL}
-      - LETSENCRYPT_HOST=${HOST_ONLYOFFICE}
-      - REDIS_SERVER_HOST=redis
-      - REDIS_SERVER_PORT=6379
-      - VIRTUAL_HOST=${HOST_ONLYOFFICE}
-
-  onlyoffice-rabbitmq:
-    image: rabbitmq:3.8.14
-    container_name: onlyoffice-rabbitmq
-    restart: always
+    expose:
+      - 9980
 
   coturn:
     build: coturn
