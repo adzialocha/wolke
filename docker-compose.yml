@@ -47,7 +47,6 @@ services:
     image: jwilder/docker-gen:0.7.0
     container_name: nginx-proxy-gen
     depends_on:
-      - collabora
       - nextcloud
       - nginx
     volumes:
